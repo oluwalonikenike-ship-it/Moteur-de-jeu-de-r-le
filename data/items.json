@@ -1,0 +1,38 @@
+[
+    {
+        "nom": "Potion de soin",
+        "type_item": "potion",
+        "effet": 30,
+        "valeur": 10
+    },
+    {
+        "nom": "Grande potion de soin",
+        "type_item": "potion",
+        "effet": 60,
+        "valeur": 25
+    },
+    {
+        "nom": "Épée en fer",
+        "type_item": "arme",
+        "effet": 5,
+        "valeur": 50
+    },
+    {
+        "nom": "Épée en acier",
+        "type_item": "arme",
+        "effet": 10,
+        "valeur": 100
+    },
+    {
+        "nom": "Bouclier en bois",
+        "type_item": "armure",
+        "effet": 3,
+        "valeur": 30
+    },
+    {
+        "nom": "Armure en fer",
+        "type_item": "armure",
+        "effet": 7,
+        "valeur": 80
+    }
+]
