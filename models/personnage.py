@@ -1,4 +1,4 @@
-class personnage:
+class Personnage:
     def __init__(self, nom, pv_max, attaque, defense, vitesse):
         self.nom = nom
         self.pv_max = pv_max
