@@ -1,0 +1,26 @@
+[
+    {
+        "nom": "Gobelin",
+        "pv": 30,
+        "attaque": 8,
+        "defense": 2,
+        "xp_donne": 50,
+        "niveau_min": 1
+    },
+    {
+        "nom": "Squelette",
+        "pv": 50,
+        "attaque": 12,
+        "defense": 5,
+        "xp_donne": 80,
+        "niveau_min": 2
+    },
+    {
+        "nom": "Dragon",
+        "pv": 200,
+        "attaque": 25,
+        "defense": 15,
+        "xp_donne": 500,
+        "niveau_min": 5
+    }
+]
