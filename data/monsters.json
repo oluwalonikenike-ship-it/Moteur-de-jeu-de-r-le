@@ -18,7 +18,7 @@
     {
         "nom": "Dragon",
         "pv": 200,
-        "attaque": 25,
+        "attaque": 35,
         "defense": 15,
         "xp_donne": 500,
         "niveau_min": 5
