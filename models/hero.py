@@ -23,7 +23,7 @@ class hero(personnage):
         def monter_niveau(self)    :
             self.niveau += 1
             self.xp = 0
-            self.xp_pour_niveau = sel.niveau * 100
+            self.xp_pour_niveau = self.niveau * 100
             self.pv_max += 20
             self.pv_actuel = self.pv_max
             self.attaque += 3
