@@ -1,4 +1,4 @@
-from models.personnage import personnage
+from models.personnage import Personnage
 
 class hero(personnage):
 
