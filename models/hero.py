@@ -18,10 +18,10 @@ class Hero(Personnage):
 
     def gagner_xp(self, montant):
         self.xp += montant
-        print(f" {self.nom} gagne {montant}) XP ! (Total: {self.xp})")
+        print(f" {self.nom} gagne {montant} XP ! (Total: {self.xp})")
         if self.xp >= self.xp_pour_niveau: self.monter_niveau()
 
-    def monter_niveau(self)    :
+    def monter_niveau(self):
         self.niveau += 1
         self.xp = 0
         self.xp_pour_niveau = self.niveau * 100
@@ -40,10 +40,9 @@ class Hero(Personnage):
             print("Cet objet n'est pas dans l'inventaire")
 
     def sauvegarder(self):
-        return
-        {
+        return{
             "nom": self.nom,
-            "classe_hero": self.classes_hero,
+            "classe_hero": self.classe_hero,
             "pv_max": self.pv_max,
             "attaque": self.attaque,
             "defense": self.defense,
