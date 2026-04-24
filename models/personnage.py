@@ -22,5 +22,5 @@ class Personnage:
         return cible.recevoir_degats(self.attaque)
     
     def __str__(self):
-            return (f"{self.nom} | PV:{self.pv_actuel}/{self.pv_max} | 
+        return (f"{self.nom} | PV:{self.pv_actuel}/{self.pv_max} | 
             ATQ: {self.attaque} | DEF: {self.defense} | Niveau: {self.niveau}")
