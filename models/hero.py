@@ -54,4 +54,6 @@ class hero(personnage):
             }
 
         def __str__(self):
-            return (f"{self.nom} ({self.classe_hero}) | " f"PV: {self.pv_actuel}/{self.pv_max} | " f" Niveau: {self.niveau} | XP: {self.xp}/" f" {self.xp_pour_niveau}")
+            return (f"{self.nom} ({self.classe_hero}) | " 
+            f"PV: {self.pv_actuel}/{self.pv_max} | " 
+            f" Niveau: {self.niveau} | XP: {self.xp}/" f" {self.xp_pour_niveau}")
