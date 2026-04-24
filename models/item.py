@@ -58,6 +58,7 @@ class Armure(Item):
             effet =f"+{defense_bonus} defense",
             valeur = valeur,
         )
+        self.defense_bonus = defense_bonus
     def equiper(self, hero):
         hero.defense += self.defense_bonus
-        print(f"(hero.nom} équiper {self.nom} (+{self.defense_bonus} DEF")
+        print(f"{hero.nom} équipe {self.nom} (+{self.defense_bonus} DEF)")
