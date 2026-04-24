@@ -48,3 +48,16 @@ class Potion(Item):
         personnage.pv_actuel += soin_reel
         print(f"{personnage.nom} utilise {self.nom} et recupere {soin_reel} PV !" 
               f"{personnage.pv_actuel}/{personnage.pv_max}")
+
+class Armure(Item):
+    "Armre a equiper"
+    def __init__(self, nom, defense_bonus, valeur):
+        super().__init__(
+            nom = nom,
+            type_item = "armure",
+            effet =f"+{defense_bonus} defense",
+            valeur = valeur,
+        )
+    def equiper(self, hero):
+        hero.defense += self.defense_bonus
+        print(f"(hero.nom} équiper {self.nom} (+{self.defense_bonus} DEF")
