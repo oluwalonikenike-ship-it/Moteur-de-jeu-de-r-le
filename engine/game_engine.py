@@ -16,13 +16,13 @@ class GameEngine:
         self.hero = None
         self.etat_jeu = "menu"
         self.chemin_sauvegarde = "data/sauvegarde.json"
-        self.chemin_monstres = "data/monsters.JSON"
+        self.chemin_monstres = "data/monsters.json"
         self.templates_monstres = self.charge_monstres()
 
 
     def charge_monstres(self):
         if not os.path.exists(self.chemin_monstres):
-            print("Fichier monsters.JSON introuvable.")
+            print("Fichier monsters.json introuvable.")
             return []
         with open(self.chemin_monstres, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -69,12 +69,12 @@ class GameEngine:
         print("\nClesses disponibles :")
         print("1. Guerrier (PV: 120, ATQ: 18, DEF: 8)")
         print("2. Mage (PV: 80, ATQ: 25, DEF: 4)")
-        print("3. Archer (PV: 100, ATQ: 20, DEF: 6")
+        print("3. Archer (PV: 100, ATQ: 20, DEF: 6)")
 
         choix = input("\nVotre choix : ").strip()
         classes = {
             "1": "Guerrier",
-            "2": "Marge",
+            "2": "Mage",
             "3": "Archer"
         }
 
@@ -104,7 +104,7 @@ class GameEngine:
 
         choix = input("\nVotre choix :").strip()
         if choix == "1":
-            self.evenement_aleatoire()
+            pass
         elif choix == "2":
             print(f"\n{self.hero}")
         elif choix == "3":
@@ -201,75 +201,81 @@ class GameEngine:
             else:
                 print("Choix invalide.")
                 continue
+                
+            if monstre.est_vivant():
+                self.tour_monstre(monstre)
+        if not self.hero.est_vivant():
+            self.defaite()
+        elif not monstre.est_vivant():
+            self.victoire(monstre)
 
-        def afficher_etat_combat(self, monstre):
-            print(f"\n  {self.hero.nom} : {self.hero.pv_actuel}/{self.hero.pv_max} PV")
-            print(f"  {monstre.nom}  : {monstre.pv_actuel}/{monstre.pv_max} PV")
+    def afficher_etat_combat(self, monstre):
+        print(f"\n  {self.hero.nom} : {self.hero.pv_actuel}/{self.hero.pv_max} PV")
+        print(f"  {monstre.nom}  : {monstre.pv_actuel}/{monstre.pv_max} PV")
 
-        def choisir_action_combat(self):
-            print("\n  Que faites-vous ?")
-            print("  1. Attaquer")
-            print("  2. Utiliser un objet")
-            print("  3. Fuir")
-            return input("  Votre choix : ").strip()
+    def choisir_action_combat(self):
+        print("\n  Que faites-vous ?")
+        print("  1. Attaquer")
+        print("  2. Utiliser un objet")
+        print("  3. Fuir")
+        return input("  Votre choix : ").strip()
 
-        def action_attaquer(self, monstre):
-            degats = self.hero.attaquer(monstre)
-            print(f"\n  {self.hero.nom} attaque {monstre.nom} pour {degats} dégâts !")
-            if not monstre.est_vivant():
-                print(f"  {monstre.nom} est vaincu !")
+    def action_attaquer(self, monstre):
+        degats = self.hero.attaquer(monstre)
+        print(f"\n  {self.hero.nom} attaque {monstre.nom} pour {degats} dégâts !")
+        if not monstre.est_vivant():
+            print(f"  {monstre.nom} est vaincu !")
 
-        def action_utiliser_objet(self):
-            self.hero.inventaire.afficher()
-            if not self.hero.inventaire.items:
+    def action_utiliser_objet(self):
+        self.hero.inventaire.afficher()
+        if not self.hero.inventaire.items:
+            return
+
+        choix = input("  Numéro de l'objet (0 pour annuler) : ").strip()
+        if not choix.isdigit():
+            print("  Entrée invalide.")
+            return
+
+        index = int(choix) - 1
+        if choix == "0":
                 return
+        if 0 <= index < len(self.hero.inventaire.items):
+            item = self.hero.inventaire.items[index]
+            self.hero.inventaire.utiliser(item, self.hero)
+        else:
+            print("  Numéro invalide.")
 
-            choix = input("  Numéro de l'objet (0 pour annuler) : ").strip()
-            if not choix.isdigit():
-                print("  Entrée invalide.")
-                return
+    def action_fuir(self):
+        if random.random() < 0.5:
+            print(f"\n {self.hero.nom} prend la fuite !")
+            return True
+        print(f"\n  {self.hero.nom} ne peut pas fuir !")
+        return False
 
-            index = int(choix) - 1
-            if choix == "0":
-                return
-            if 0 <= index < len(self.hero.inventaire.items):
-                item = self.hero.inventaire.items[index]
-                self.hero.inventaire.utiliser(item, self.hero)
-            else:
-                print("  Numéro invalide.")
+    def tour_monstre(self, monstre):
+        if random.random() < 0.2:
+            degats_bruts = monstre.attaque_speciale()
+            degats = self.hero.recevoir_degats(degats_bruts)
+        else:
+            degats = monstre.attaquer(self.hero)
+        print(f"  {monstre.nom} attaque {self.hero.nom} pour {degats} dégâts !")
 
-        def action_fuir(self):
-            if random.random() < 0.5:
-                print(f"\n {self.hero.nom} prend la fuite !")
-                return True
-            print(f"\n  {self.hero.nom} ne peut pas fuir !")
-            return False
+    def victoire(self, monstre):
+        print(f"\nVictoire ! Vous avez vaincu {monstre.nom} !")
+        self.hero.gagner_xp(monstre.xp_donne)
+        loot = monstre.generer_loot()
+        if loot:
+            self.hero.inventaire.ajouter(loot)
 
-        def tour_monstre(self, monstre):
-            if random.random() < 0.2:
-                degats_bruts = monstre.attaque_speciale()
-                degats = self.hero.recevoir_degats(degats_bruts)
-            else:
-                degats = monstre.attaquer(self.hero)
-            print(f"  {monstre.nom} attaque {self.hero.nom} pour {degats} dégâts !")
+    def defaite(self):
+        print(f"\n{self.hero.nom} est tombé au combat...")
+        print("Game Over.")
 
-        def victoire(self, monstre):
-            print(f"\nVictoire ! Vous avez vaincu {monstre.nom} !")
-            self.hero.gagner_xp(monstre.xp_donne)
-            loot = monstre.generer_loot()
-            if loot:
-                self.hero.inventaire.ajouter(loot)
-
-        def defaite(self):
-            print(f"\n{self.hero.nom} est tombé au combat...")
-            print("Game Over.")
-
-        def sauvegarder(self):
-            if self.hero is None:
-                print("Aucun héros à sauvegarder.")
-                return
-            os.makedirs(name="data", exist_ok=True)
-
+    def sauvegarder(self):
+        if self.hero is None:
+            print("Aucun héros à sauvegarder.")
+            return
+        os.makedirs(name="data", exist_ok=True)
         donnees = {
             "nom": self.hero.nom,
             "classe": self.hero.classe_hero,
