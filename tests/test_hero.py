@@ -3,8 +3,7 @@ from models.hero import Hero
 
 
 class TestHero(unittest.TestCase):
-    """Tests unitaires pour la classe Hero."""
-
+    
     def setUp(self):
         self.hero = Hero(nom="Kael", classe_hero="Guerrier")
 

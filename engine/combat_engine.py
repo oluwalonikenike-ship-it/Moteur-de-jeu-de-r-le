@@ -1,5 +1,5 @@
 import random
-from models.hero import hero
+from models.hero import Hero
 
 class CombatEngine: 
     def __init__(self, hero, monstre):
@@ -8,7 +8,7 @@ class CombatEngine:
         self.tour = 0
 
     def calculer_degats(self, attaquant, defenseur): 
-        return max(1, attaquant.attaque, defenseur.defense)
+        return max(1, attaquant.attaque - defenseur.defense)
     
     def afficher_log(self):
         print("-" *40)
