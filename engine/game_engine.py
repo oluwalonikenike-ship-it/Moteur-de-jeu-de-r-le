@@ -4,7 +4,8 @@ import os
 import random
 from models.hero import Hero
 from models.monstre import Monstre
-from models.item import Arme, Potion
+from models.item import Arme, Potion, Armure
+from database import Database
 
 class GameEngine:
     STATS_CLASSE = {
@@ -18,7 +19,7 @@ class GameEngine:
         self.chemin_sauvegarde = "data/sauvegarde.json"
         self.chemin_monstres = "data/monsters.json"
         self.templates_monstres = self.charge_monstres()
-
+        self.db = Database()
 
     def charge_monstres(self):
         if not os.path.exists(self.chemin_monstres):
@@ -139,6 +140,8 @@ class GameEngine:
             Potion(nom="Grande Potion", soin=60, valeur=25),
             Arme(nom="Épée rouillée", degats_bonus=3, valeur=15),
             Arme(nom="Dague acérée", degats_bonus=5, valeur=30),
+            Armure(nom="Bouclier en bois", defense_bonus=3, valeur=30),
+            Armure(nom="Armure en fer", defense_bonus=7,valeur=80),
         ])
         print(f"Vous obtenez : {butin}")
         self.hero.inventaire.ajouter(butin)
@@ -266,10 +269,13 @@ class GameEngine:
         loot = monstre.generer_loot()
         if loot:
             self.hero.inventaire.ajouter(loot)
+        self.db.enregister_partie(self.hero, "victoire")
+        self.db.enregistrer_score(self.hero)
 
     def defaite(self):
         print(f"\n{self.hero.nom} est tombé au combat...")
         print("Game Over.")
+        self.db.enregistrer_partie(self.hero, "defaite")
 
     def sauvegarder(self):
         if self.hero is None:
@@ -296,6 +302,7 @@ class GameEngine:
                     "valeur": item.valeur,
                     "soin": getattr(item, "soin", 0),
                     "degats_bonus": getattr(item, "degats_bonus", 0),
+                    "defense_bonus": getattr(item, "defense_bonus",0),
                 }
                 for item in self.hero.inventaire.items
             ]
@@ -328,6 +335,8 @@ class GameEngine:
                 item = Arme(item_data["nom"], item_data["degats_bonus"], item_data["valeur"])
             elif item_data["type"] == "potion":
                 item = Potion(item_data["nom"], item_data["soin"], item_data["valeur"])
+            elif item_data["type"] == "armure":
+                item = Armure(item_data["nom"], item_data["defense_bonus"], item_data["valeur"])
             else:
                 continue
             self.hero.inventaire.ajouter(item)
