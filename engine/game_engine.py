@@ -269,7 +269,7 @@ class GameEngine:
         loot = monstre.generer_loot()
         if loot:
             self.hero.inventaire.ajouter(loot)
-        self.db.enregister_partie(self.hero, "victoire")
+        self.db.enregistrer_partie(self.hero, "victoire")
         self.db.enregistrer_score(self.hero)
 
     def defaite(self):
