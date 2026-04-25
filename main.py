@@ -1,35 +1,5 @@
-﻿from utils.display import afficher_titre, afficher_menu, demander_choix
-from models.hero import Hero
+﻿from engine.game_engine import GameEngine
 
-
-def nouvelle_partie():
-    afficher_titre("NOUVELLE PARTIE")
-    nom = input("Entre le nom de ton héros : ").strip()
-
-    print("\nChoisis ta classe :")
-    classes = ["Guerrier", "Mage", "Voleur"]
-    afficher_menu(classes)
-    choix = demander_choix(len(classes))
-    classe_hero = classes[choix - 1]
-
-    hero = Hero(nom=nom, classe_hero=classe_hero)
-    print(f"\nHéros créé : {hero}")
-    return hero
-
-
-def menu_principal():
-    afficher_titre("MOTEUR DE JEU DE ROLE RPG")
-
-    options = ["Nouvelle partie", "Quitter"]
-    afficher_menu(options)
-    choix = demander_choix(len(options))
-
-    if choix == 1:
-        hero = nouvelle_partie()
-        print("\nLe jeu commence bientôt... (à compléter)")
-    elif choix == 2:
-        print("\nAu revoir !")
-
-
-if __name__ == "__main__":
-    menu_principal()
+if __name__ == '__main__':
+    jeu = GameEngine()
+    jeu.demarrer()
