@@ -1,46 +1,61 @@
+"""Module contenant la classe Hero."""
 from models.personnage import Personnage
 from models.inventaire import Inventaire
 
+
 class Hero(Personnage):
+    """Personnage contrôlé par le joueur."""
 
     def __init__(self, nom, classe_hero):
+        """Initialise un héros avec ses statistiques de base."""
+        if not isinstance(classe_hero, str) or not classe_hero.strip():
+            raise ValueError("La classe du héros doit être une chaine non vide.")
         super().__init__(
-         nom=nom,
-         pv_max=100,
-         attaque=15,
-         defense=5,
-         vitesse=10
-    )
+            nom=nom,
+            pv_max=100,
+            attaque=15,
+            defense=5,
+            vitesse=10
+        )
         self.classe_hero = classe_hero
         self.inventaire = Inventaire()
         self.or_possede = 0
         self.xp_pour_niveau = 100
 
     def gagner_xp(self, montant):
+        """Ajoute de l'XP et vérifie la montée de niveau."""
+        if not isinstance(montant, (int, float)) or montant < 0:
+            raise ValueError("Le montant d'XP doit être un nombre positif.")
         self.xp += montant
-        print(f" {self.nom} gagne {montant} XP ! (Total: {self.xp})")
-        if self.xp >= self.xp_pour_niveau: self.monter_niveau()
+        print(f"{self.nom} gagne {montant} XP ! (Total: {self.xp})")
+        if self.xp >= self.xp_pour_niveau:
+            self.monter_niveau()
 
     def monter_niveau(self):
+        """Augmente le niveau et améliore les statistiques."""
         self.niveau += 1
         self.xp = 0
         self.xp_pour_niveau = self.niveau * 100
         self.pv_max += 20
         self.pv_actuel = self.pv_max
         self.attaque += 3
-        self.defense +=2
-        print(f" {self.nom} monte au niveau {self.niveau} !")
-        print(f" PV max: {self.pv_max} | ATQ: {self.attaque}" f"| DEF: {self.defense}")
+        self.defense += 2
+        print(f"🎉 {self.nom} monte au niveau {self.niveau} !")
+        print(f"PV max: {self.pv_max} | ATQ: {self.attaque} | DEF: {self.defense}")
 
-    def utiliser_objet(self,item): 
-        if item in self.inventaire: 
+    def utiliser_objet(self, item):
+        """Utilise un objet de l'inventaire sur le héros."""
+        if item is None:
+            raise ValueError("L'objet ne peut pas être None.")
+        if item in self.inventaire.items:
             item.utiliser(self)
-            self.inventaire.remove(item)
+            self.inventaire.supprimer(item)
         else:
-            print("Cet objet n'est pas dans l'inventaire")
+            print("Cet objet n'est pas dans l'inventaire.")
 
     def sauvegarder(self):
-        return{
+        """Retourne un dictionnaire des données du héros."""
+        return {
             "nom": self.nom,
             "classe_hero": self.classe_hero,
             "pv_max": self.pv_max,
@@ -54,6 +69,9 @@ class Hero(Personnage):
         }
 
     def __str__(self):
-        return (f"{self.nom} ({self.classe_hero}) | " 
-                f"PV: {self.pv_actuel}/{self.pv_max} | " 
-                f" Niveau: {self.niveau} | XP: {self.xp}/" f" {self.xp_pour_niveau}")
+        """Retourne une description lisible du héros."""
+        return (
+            f"{self.nom} ({self.classe_hero}) | "
+            f"PV: {self.pv_actuel}/{self.pv_max} | "
+            f"Niveau: {self.niveau} | XP: {self.xp}/{self.xp_pour_niveau}"
+        )
