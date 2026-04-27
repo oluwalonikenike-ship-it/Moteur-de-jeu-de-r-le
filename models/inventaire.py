@@ -12,7 +12,7 @@ class Inventaire:
     def ajouter(self, item):
         """Ajoute un item si la capacité n'est pas atteinte."""
         if item is None:
-            raise ValueError("Impossible d'ajouter un objet None.")
+            raise ValueError("Impossible d'ajouter un objet inexistant.")
         if len(self.items) >= self.capacite_max:
             print(f"Inventaire plein ! Impossible d'ajouter {item.nom}.")
             return False
@@ -23,7 +23,7 @@ class Inventaire:
     def supprimer(self, item):
         """Supprime un item de l'inventaire."""
         if item is None:
-            raise ValueError("Impossible de supprimer un objet None.")
+            raise ValueError("Impossible de supprimer un objet qui n'existe pas.")
         if item in self.items:
             self.items.remove(item)
             print(f"{item.nom} retiré de l'inventaire.")
@@ -32,9 +32,8 @@ class Inventaire:
         return False
 
     def utiliser(self, item, personnage):
-        """Utilise un item sur un personnage et le retire de l'inventaire."""
         if item is None:
-            raise ValueError("L'objet ne peut pas être None.")
+            raise ValueError("L'objet ne peut pas être Null/absent.")
         if personnage is None:
             raise ValueError("Le personnage ne peut pas être None.")
         if item in self.items:

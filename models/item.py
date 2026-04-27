@@ -91,12 +91,12 @@ class Armure(Item):
     def equiper(self, hero):
         """Équipe l'armure sur le héros."""
         if hero is None:
-            raise ValueError("Le héros ne peut pas être None.")
+            raise ValueError("Le héros ne peut pas être inexistant.")
         hero.defense += self.defense_bonus
         print(f"{hero.nom} équipe {self.nom} (+{self.defense_bonus} DEF)")
 
     def utiliser(self, hero):
         """Utiliser une armure l'équipe automatiquement."""
         if hero is None:
-            raise ValueError("Le héros ne peut pas être None.")
+            raise ValueError("Le héros ne peut pas être inexistant.")
         self.equiper(hero)

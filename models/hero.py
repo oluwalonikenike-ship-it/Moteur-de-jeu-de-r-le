@@ -4,12 +4,10 @@ from models.inventaire import Inventaire
 
 
 class Hero(Personnage):
-    """Personnage contrôlé par le joueur."""
 
     def __init__(self, nom, classe_hero):
-        """Initialise un héros avec ses statistiques de base."""
         if not isinstance(classe_hero, str) or not classe_hero.strip():
-            raise ValueError("La classe du héros doit être une chaine non vide.")
+            raise ValueError("La classe du héros ne doit pas etre vide.")
         super().__init__(
             nom=nom,
             pv_max=100,
@@ -23,16 +21,16 @@ class Hero(Personnage):
         self.xp_pour_niveau = 100
 
     def gagner_xp(self, montant):
-        """Ajoute de l'XP et vérifie la montée de niveau."""
+        """Ajout de l'XP et vérifie la montée de niveau."""
         if not isinstance(montant, (int, float)) or montant < 0:
-            raise ValueError("Le montant d'XP doit être un nombre positif.")
+            raise ValueError("L'XP doit être un nombre positif.")
         self.xp += montant
         print(f"{self.nom} gagne {montant} XP ! (Total: {self.xp})")
         if self.xp >= self.xp_pour_niveau:
             self.monter_niveau()
 
     def monter_niveau(self):
-        """Augmente le niveau et améliore les statistiques."""
+        """Augmentation de niveau et amélioration des statistiques."""
         self.niveau += 1
         self.xp = 0
         self.xp_pour_niveau = self.niveau * 100
@@ -54,7 +52,6 @@ class Hero(Personnage):
             print("Cet objet n'est pas dans l'inventaire.")
 
     def sauvegarder(self):
-        """Retourne un dictionnaire des données du héros."""
         return {
             "nom": self.nom,
             "classe_hero": self.classe_hero,
@@ -69,7 +66,6 @@ class Hero(Personnage):
         }
 
     def __str__(self):
-        """Retourne une description lisible du héros."""
         return (
             f"{self.nom} ({self.classe_hero}) | "
             f"PV: {self.pv_actuel}/{self.pv_max} | "
