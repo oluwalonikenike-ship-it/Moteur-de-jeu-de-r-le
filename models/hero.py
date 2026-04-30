@@ -1,11 +1,22 @@
-from models.personnage import Personnage
 
+from models.personnage import Personnage
+from models.inventaire import Inventaire
 
 class Hero(Personnage):
     
 
     def __init__(self, nom, classe_hero):
-        
+
+     from models.personnage import Personnage
+     from models.inventaire import Inventaire
+
+
+class Hero(Personnage):
+
+    def __init__(self, nom, classe_hero):
+        if not isinstance(classe_hero, str) or not classe_hero.strip():
+            raise ValueError("La classe du héros ne doit pas etre vide.")
+
         super().__init__(
             nom=nom,
             pv_max=100,
@@ -14,19 +25,27 @@ class Hero(Personnage):
             vitesse=10
         )
         self.classe_hero = classe_hero
-        self.inventaire = []
+        self.inventaire = Inventaire()
+
         self.or_possede = 0
         self.xp_pour_niveau = 100
 
     def gagner_xp(self, montant):
+
         
         self.xp += montant
         print(f"{self.nom} gagne {montant} XP ! (Total : {self.xp})")
+
+        if not isinstance(montant, (int, float)) or montant < 0:
+            raise ValueError("L'XP doit être un nombre positif.")
+        self.xp += montant
+        print(f"{self.nom} gagne {montant} XP ! (Total: {self.xp})")
+
         if self.xp >= self.xp_pour_niveau:
             self.monter_niveau()
 
     def monter_niveau(self):
-        
+     
         self.niveau += 1
         self.xp = 0
         self.xp_pour_niveau = self.niveau * 100
@@ -35,17 +54,29 @@ class Hero(Personnage):
         self.attaque += 3
         self.defense += 2
         print(f"🎉 {self.nom} monte au niveau {self.niveau} !")
+        print(f"PV max: { self.pv_max} | ATQ: {self.attaque} | DEF: {self.defense}")
+
 
     def utiliser_objet(self, item):
         
         if item in self.inventaire:
-            item.utiliser(self)
+            item.utiliser(self) 
             self.inventaire.remove(item)
+    
+    def utiliser_objet(self, item):
+        """Utilise un objet de l'inventaire sur le héros."""
+        if item is None:
+            raise ValueError("L'objet ne peut pas être None.")
+        if item in self.inventaire.items:
+            item.utiliser(self)
+            self.inventaire.supprimer(item)
+
         else:
             print("Cet objet n'est pas dans l'inventaire.")
 
     def sauvegarder(self):
-        
+
+
         return {
             "nom": self.nom,
             "classe_hero": self.classe_hero,
@@ -66,3 +97,8 @@ class Hero(Personnage):
                 f"PV: {self.pv_actuel}/{self.pv_max} | "
                 f"Niveau: {self.niveau} | XP: {self.xp}/"
                 f"{self.xp_pour_niveau}")
+        return (
+            f"{self.nom} ({self.classe_hero}) | "
+            f"PV: {self.pv_actuel}/{self.pv_max} | "
+            f"Niveau: {self.niveau} | XP: {self.xp}/{self.xp_pour_niveau}"
+        )
