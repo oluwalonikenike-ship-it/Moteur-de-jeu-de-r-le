@@ -1,4 +1,4 @@
-
+    
 from models.personnage import Personnage
 from models.inventaire import Inventaire
 
