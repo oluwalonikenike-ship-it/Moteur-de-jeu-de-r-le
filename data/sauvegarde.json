@@ -1,13 +1,13 @@
 {
-    "nom": "Hanine",
+    "nom": "HANINE",
     "classe": "Guerrier",
-    "niveau": 1,
-    "xp": 50,
-    "xp_pour_niveau": 100,
-    "pv_actuel": 119,
-    "pv_max": 120,
-    "attaque": 18,
-    "defense": 8,
+    "niveau": 2,
+    "xp": 100,
+    "xp_pour_niveau": 200,
+    "pv_actuel": 138,
+    "pv_max": 140,
+    "attaque": 21,
+    "defense": 10,
     "vitesse": 10,
     "or": 0,
     "inventaire": [
@@ -21,12 +21,12 @@
             "defense_bonus": 0
         },
         {
-            "nom": "Potion de soin",
-            "type": "potion",
-            "effet": "+30 PV",
-            "valeur": 10,
-            "soin": 30,
-            "degats_bonus": 0,
+            "nom": "Epee rouillee",
+            "type": "arme",
+            "effet": "+3 attaque",
+            "valeur": 15,
+            "soin": 0,
+            "degats_bonus": 3,
             "defense_bonus": 0
         }
     ]

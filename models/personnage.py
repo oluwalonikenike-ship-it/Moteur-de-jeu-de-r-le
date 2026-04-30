@@ -1,6 +1,3 @@
-"""Module contenant la classe Personnage."""
-
-
 class Personnage:
     def __init__(self, nom, pv_max, attaque, defense, vitesse):
         if not isinstance(nom, str) or not nom.strip():
