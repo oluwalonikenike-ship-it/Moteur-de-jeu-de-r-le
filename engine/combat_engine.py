@@ -32,21 +32,22 @@ class CombatEngine:
             print(f"Tu frappes {self.monstre.nom} pour {degats} dégâts!")
 
         elif choix == "2":
-            potions = [i for i in self.hero.inventaire if i.type_item  =="potion"]
+            if random.random() < 0.5:
+                print(f"{self.monstre.nom} a raté son attaque!")
+                return "fuite"
+            else:
+                print("Impossible de fuir! Le monstre t'attaque!")
+                degats =self.calculer_degats(self.monstre, self.hero)
+                self.hero.pv_actuel -= degats
+                self.hero.pv_actuel = max(0, self.hero.pv_actuel)
+                print(f"{self.monstre.nom} t'inflige {degats} dégâts!")
+
+        elif choix == "3":
+            potions = [i for i in self.hero.inventaire.items if i.type_item  =="potion"]
             if potions :
                 self.hero.utiliser_objet(potions[0])
             else: 
                 print("Tu n'as pas de potion!")
-
-        elif choix == "3":
-                if random.random() < 0.5:
-                    print(f"{self.monstre.nom} a raté son attaque!")
-                else:
-                    print("Impossible de fuir! Le monstre t'attaque!")
-                    degats =self.calculer_degats(self.monstre, self.hero)
-                    self.hero.pv_actuel -= degats
-                    self.hero.pv_actuel = max(0, self.hero.pv_actuel)
-                    print(f"{self.monstre.nom} t'inflige {degats} dégâts!")
 
         else:
             print("Choix invalide! Tu perds ton tour.")
@@ -57,7 +58,7 @@ class CombatEngine:
         degats = self.calculer_degats(self.monstre, self.hero)
         self.hero.pv_actuel -= degats
         self.hero.pv_actuel = max(0, self.hero.pv_actuel)
-        print(f"{self.monstre.nom} t'attaque pour{degats} dégâts!") 
+        print(f"{self.monstre.nom} t'attaque pour {degats} dégâts!") 
 
     def verifier_fin(self):
         if not self.hero.est_vivant():
@@ -77,7 +78,7 @@ class CombatEngine:
             fin = self.verifier_fin()
             if fin == "victoire":
                print(f"Tu as vaincu {self.monstre.nom}!")
-               self.hero.gagner_xp(self.monstre.xp_valeur)
+               self.hero.gagner_xp(self.monstre.xp_donne)
                return "victoire"
             
             self.tour_monstre()

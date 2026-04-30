@@ -1,37 +1,37 @@
-"""Module contenant le moteur principal du jeu"""
+﻿"""Module contenant le moteur principal du jeu."""
 import json
 import os
 import random
 from models.hero import Hero
 from models.monstre import Monstre
-from models.item import Arme, Potion
+from models.item import Arme, Potion, Armure
+from database import Database
+from data_loader import DataLoader
+
 
 class GameEngine:
+    """Orchestre la boucle principale du jeu."""
+
     STATS_CLASSE = {
         "Guerrier": {"pv_max": 120, "attaque": 18, "defense": 8},
         "Mage": {"pv_max": 80, "attaque": 25, "defense": 4},
         "Archer": {"pv_max": 100, "attaque": 20, "defense": 6},
     }
+
     def __init__(self):
+        """Initialise le moteur de jeu."""
         self.hero = None
         self.etat_jeu = "menu"
         self.chemin_sauvegarde = "data/sauvegarde.json"
-        self.chemin_monstres = "data/monsters.JSON"
-        self.templates_monstres = self.charge_monstres()
-
-
-    def charge_monstres(self):
-        if not os.path.exists(self.chemin_monstres):
-            print("Fichier monsters.JSON introuvable.")
-            return []
-        with open(self.chemin_monstres, "r", encoding="utf-8") as f:
-            return json.load(f)
-
+        self.loader = DataLoader()
+        self.templates_monstres = self.loader.charger_monstres()
+        self.db = Database()
 
     def demarrer(self):
-        print("\n" + "="*50)
+        """Démarre le jeu et affiche le menu principal."""
+        print("\n" + "=" * 50)
         print("     BIENVENUE DANS LE JEU RPG PYTHON")
-        print("="*50)
+        print("=" * 50)
 
         while self.etat_jeu != "fin":
             if self.etat_jeu == "menu":
@@ -39,9 +39,8 @@ class GameEngine:
             elif self.etat_jeu == "exploration":
                 self.boucle_exploration()
 
-
-
     def afficher_menu(self):
+        """Affiche le menu principal."""
         print("\n--- MENU PRINCIPAL ---")
         print("1. Nouvelle partie")
         print("2. Charger partie")
@@ -54,27 +53,27 @@ class GameEngine:
         elif choix == "2":
             self.charger()
         elif choix == "3":
-            print("\nMerci d'avoir joué !")
+            print("\nMerci d'avoir joue !")
             self.etat_jeu = "fin"
         else:
-            print("choix invalide")
-
+            print("Choix invalide.")
 
     def nouvelle_partie(self):
+        """Cree un nouveau heros et lance l'exploration."""
         print("\n--- CREATION DU HERO ---")
         nom = input("Nom de votre heros :").strip()
         if not nom:
             nom = "Heros"
 
-        print("\nClesses disponibles :")
+        print("\nClasses disponibles :")
         print("1. Guerrier (PV: 120, ATQ: 18, DEF: 8)")
         print("2. Mage (PV: 80, ATQ: 25, DEF: 4)")
-        print("3. Archer (PV: 100, ATQ: 20, DEF: 6")
+        print("3. Archer (PV: 100, ATQ: 20, DEF: 6)")
 
         choix = input("\nVotre choix : ").strip()
         classes = {
             "1": "Guerrier",
-            "2": "Marge",
+            "2": "Mage",
             "3": "Archer"
         }
 
@@ -90,12 +89,12 @@ class GameEngine:
         potion_depart = Potion(nom="Potion de soin", soin=30, valeur=10)
         self.hero.inventaire.ajouter(potion_depart)
 
-        print(f"\n {self.hero.nom} le {classe} est prêt à l'aventure !")
+        print(f"\n{self.hero.nom} le {classe} est pret a l'aventure !")
         print(self.hero)
         self.etat_jeu = "exploration"
 
-
     def boucle_exploration(self):
+        """Boucle d'exploration principale."""
         print("\n--- EXPLORATION ---")
         print("1. Avancer dans le donjon")
         print("2. Afficher mes statistiques")
@@ -103,61 +102,71 @@ class GameEngine:
         print("4. Sauvegarder et quitter")
 
         choix = input("\nVotre choix :").strip()
+
         if choix == "1":
-            self.evenement_aleatoire()
+            print("\nVous avancez prudemment dans le donjon...")
+            tirage = random.random()
+            if tirage < 0.60:
+                monstre = self.generer_monstre()
+                if monstre:
+                    self.lancer_combat(monstre)
+            elif tirage < 0.80:
+                self.trouver_coffre()
+            else:
+                self.se_reposer()
+            if not self.hero.est_vivant():
+                print(f"\n{self.hero.nom} est mort. Fin de partie.")
+                self.etat_jeu = "menu"
         elif choix == "2":
             print(f"\n{self.hero}")
         elif choix == "3":
             self.hero.inventaire.afficher()
         elif choix == "4":
             self.sauvegarder()
-            print("\nPartie sauvegardée. À bientôt !")
+            print("\nPartie sauvegardee. A bientot !")
             self.etat_jeu = "menu"
         else:
-            print("Choix invalide")
-
-        print("\nVous avancez prudemment dans le donjon...")
-        tirage = random.random()
-
-        if tirage < 0.60:
-            monstre = self.generer_monstre()
-            if monstre:
-                self.lancer_combat(monstre)
-        elif tirage < 0.80:
-            self.trouver_coffre()
-        else:
-            self.se_reposer()
-
-        if not self.hero.est_vivant():
-            print(f"\n {self.hero.nom} est mort. Fin de partie.")
-            self.etat_jeu = "menu"
+            print("Choix invalide.")
 
     def trouver_coffre(self):
+        """Le heros trouve un coffre avec un item aleatoire."""
         print("\nVous trouvez un coffre !")
-        butin = random.choice([
-            Potion(nom="Potion de soin", soin=30, valeur=10),
-            Potion(nom="Grande Potion", soin=60, valeur=25),
-            Arme(nom="Épée rouillée", degats_bonus=3, valeur=15),
-            Arme(nom="Dague acérée", degats_bonus=5, valeur=30),
-        ])
-        print(f"Vous obtenez : {butin}")
-        self.hero.inventaire.ajouter(butin)
+        items_data = self.loader.charger_items()
+        if not items_data:
+            print("Le coffre est vide.")
+            return
+        item_data = random.choice(items_data)
+        type_item = item_data["type_item"]
+        nom = item_data["nom"]
+        effet = item_data["effet"]
+        valeur = item_data["valeur"]
+
+        if type_item == "arme":
+            item = Arme(nom, degats_bonus=effet, valeur=valeur)
+        elif type_item == "potion":
+            item = Potion(nom, soin=effet, valeur=valeur)
+        elif type_item == "armure":
+            item = Armure(nom, defense_bonus=effet, valeur=valeur)
+        else:
+            return
+        print(f"Vous obtenez : {item}")
+        self.hero.inventaire.ajouter(item)
 
     def se_reposer(self):
+        """Le heros se repose et recupere des PV."""
         soin = int(self.hero.pv_max * 0.3)
         soin_reel = min(soin, self.hero.pv_max - self.hero.pv_actuel)
         self.hero.pv_actuel += soin_reel
-        print(f"\n Vous trouvez un endroit calme pour vous reposer.")
-        print(f"Vous récupérez {soin_reel} PV. ({self.hero.pv_actuel}/{self.hero.pv_max})")
+        print(f"\nVous trouvez un endroit calme pour vous reposer.")
+        print(f"Vous recuperez {soin_reel} PV. ({self.hero.pv_actuel}/{self.hero.pv_max})")
 
     def generer_monstre(self):
+        """Genere un monstre adapte au niveau du heros."""
         niveau_hero = self.hero.niveau
-
         disponibles = [
             m for m in self.templates_monstres
             if m["niveau_min"] <= niveau_hero
         ]
-
         if not disponibles:
             disponibles = self.templates_monstres
         template = random.choice(disponibles)
@@ -169,7 +178,7 @@ class GameEngine:
 
         loot = [
             Potion(nom="Potion de soin", soin=30, valeur=10),
-            Arme(nom="Épée rouillée", degats_bonus=3, valeur=15),
+            Arme(nom="Epee rouillee", degats_bonus=3, valeur=15),
         ]
         return Monstre(
             nom=template["nom"],
@@ -180,10 +189,11 @@ class GameEngine:
             loot_possible=loot
         )
 
-    """DEBUT DU SYSTEM DE COMBAT"""
+    # Systeme de combat
 
     def lancer_combat(self, monstre):
-        print(f"\nUn {monstre.nom} apparaît !")
+        """Lance et gere la boucle de combat complete."""
+        print(f"\nUn {monstre.nom} apparait !")
         print(f"   {monstre}")
         print("-" * 40)
 
@@ -202,74 +212,93 @@ class GameEngine:
                 print("Choix invalide.")
                 continue
 
-        def afficher_etat_combat(self, monstre):
-            print(f"\n  {self.hero.nom} : {self.hero.pv_actuel}/{self.hero.pv_max} PV")
-            print(f"  {monstre.nom}  : {monstre.pv_actuel}/{monstre.pv_max} PV")
+            if monstre.est_vivant():
+                self.tour_monstre(monstre)
 
-        def choisir_action_combat(self):
-            print("\n  Que faites-vous ?")
-            print("  1. Attaquer")
-            print("  2. Utiliser un objet")
-            print("  3. Fuir")
-            return input("  Votre choix : ").strip()
+        if not self.hero.est_vivant():
+            self.defaite()
+        elif not monstre.est_vivant():
+            self.victoire(monstre)
 
-        def action_attaquer(self, monstre):
-            degats = self.hero.attaquer(monstre)
-            print(f"\n  {self.hero.nom} attaque {monstre.nom} pour {degats} dégâts !")
-            if not monstre.est_vivant():
-                print(f"  {monstre.nom} est vaincu !")
+    def afficher_etat_combat(self, monstre):
+        """Affiche l'etat des deux combattants."""
+        print(f"\n  {self.hero.nom} : {self.hero.pv_actuel}/{self.hero.pv_max} PV")
+        print(f"  {monstre.nom}  : {monstre.pv_actuel}/{monstre.pv_max} PV")
 
-        def action_utiliser_objet(self):
-            self.hero.inventaire.afficher()
-            if not self.hero.inventaire.items:
-                return
+    def choisir_action_combat(self):
+        """Affiche les actions et retourne le choix."""
+        print("\n  Que faites-vous ?")
+        print("  1. Attaquer")
+        print("  2. Utiliser un objet")
+        print("  3. Fuir")
+        return input("  Votre choix : ").strip()
 
-            choix = input("  Numéro de l'objet (0 pour annuler) : ").strip()
-            if not choix.isdigit():
-                print("  Entrée invalide.")
-                return
+    def action_attaquer(self, monstre):
+        """Le heros attaque le monstre."""
+        degats = self.hero.attaquer(monstre)
+        print(f"\n  {self.hero.nom} attaque {monstre.nom} pour {degats} degats !")
+        if not monstre.est_vivant():
+            print(f"  {monstre.nom} est vaincu !")
 
-            index = int(choix) - 1
-            if choix == "0":
-                return
-            if 0 <= index < len(self.hero.inventaire.items):
-                item = self.hero.inventaire.items[index]
-                self.hero.inventaire.utiliser(item, self.hero)
-            else:
-                print("  Numéro invalide.")
+    def action_utiliser_objet(self):
+        """Le heros utilise un objet de son inventaire."""
+        self.hero.inventaire.afficher()
+        if not self.hero.inventaire.items:
+            return
 
-        def action_fuir(self):
-            if random.random() < 0.5:
-                print(f"\n {self.hero.nom} prend la fuite !")
-                return True
-            print(f"\n  {self.hero.nom} ne peut pas fuir !")
-            return False
+        choix = input("  Numero de l'objet (0 pour annuler) : ").strip()
+        if not choix.isdigit():
+            print("  Entree invalide.")
+            return
 
-        def tour_monstre(self, monstre):
-            if random.random() < 0.2:
-                degats_bruts = monstre.attaque_speciale()
-                degats = self.hero.recevoir_degats(degats_bruts)
-            else:
-                degats = monstre.attaquer(self.hero)
-            print(f"  {monstre.nom} attaque {self.hero.nom} pour {degats} dégâts !")
+        index = int(choix) - 1
+        if choix == "0":
+            return
+        if 0 <= index < len(self.hero.inventaire.items):
+            item = self.hero.inventaire.items[index]
+            self.hero.inventaire.utiliser(item, self.hero)
+        else:
+            print("  Numero invalide.")
 
-        def victoire(self, monstre):
-            print(f"\nVictoire ! Vous avez vaincu {monstre.nom} !")
-            self.hero.gagner_xp(monstre.xp_donne)
-            loot = monstre.generer_loot()
-            if loot:
-                self.hero.inventaire.ajouter(loot)
+    def action_fuir(self):
+        """Le heros tente de fuir le combat."""
+        if random.random() < 0.5:
+            print(f"\n{self.hero.nom} prend la fuite !")
+            return True
+        print(f"\n  {self.hero.nom} ne peut pas fuir !")
+        return False
 
-        def defaite(self):
-            print(f"\n{self.hero.nom} est tombé au combat...")
-            print("Game Over.")
+    def tour_monstre(self, monstre):
+        """Le monstre attaque le heros."""
+        if random.random() < 0.2:
+            degats_bruts = monstre.attaque_speciale()
+            degats = self.hero.recevoir_degats(degats_bruts)
+        else:
+            degats = monstre.attaquer(self.hero)
+        print(f"  {monstre.nom} attaque {self.hero.nom} pour {degats} degats !")
 
-        def sauvegarder(self):
-            if self.hero is None:
-                print("Aucun héros à sauvegarder.")
-                return
-            os.makedirs(name="data", exist_ok=True)
+    def victoire(self, monstre):
+        """Gere la victoire du heros."""
+        print(f"\nVictoire ! Vous avez vaincu {monstre.nom} !")
+        self.hero.gagner_xp(monstre.xp_donne)
+        loot = monstre.generer_loot()
+        if loot:
+            self.hero.inventaire.ajouter(loot)
+        self.db.enregistrer_partie(self.hero, "victoire")
+        self.db.enregistrer_score(self.hero)
 
+    def defaite(self):
+        """Gere la defaite du heros."""
+        print(f"\n{self.hero.nom} est tombe au combat...")
+        print("Game Over.")
+        self.db.enregistrer_partie(self.hero, "defaite")
+
+    def sauvegarder(self):
+        """Sauvegarde la progression dans un fichier JSON."""
+        if self.hero is None:
+            print("Aucun heros a sauvegarder.")
+            return
+        os.makedirs("data", exist_ok=True)
         donnees = {
             "nom": self.hero.nom,
             "classe": self.hero.classe_hero,
@@ -290,17 +319,18 @@ class GameEngine:
                     "valeur": item.valeur,
                     "soin": getattr(item, "soin", 0),
                     "degats_bonus": getattr(item, "degats_bonus", 0),
+                    "defense_bonus": getattr(item, "defense_bonus", 0),
                 }
                 for item in self.hero.inventaire.items
             ]
         }
-
         with open(self.chemin_sauvegarde, "w", encoding="utf-8") as f:
             json.dump(donnees, f, indent=4, ensure_ascii=False)
 
     def charger(self):
+        """Charge une partie depuis un fichier JSON."""
         if not os.path.exists(self.chemin_sauvegarde):
-            print("\nAucune sauvegarde trouvée.")
+            print("\nAucune sauvegarde trouvee.")
             return
 
         with open(self.chemin_sauvegarde, "r", encoding="utf-8") as f:
@@ -322,10 +352,12 @@ class GameEngine:
                 item = Arme(item_data["nom"], item_data["degats_bonus"], item_data["valeur"])
             elif item_data["type"] == "potion":
                 item = Potion(item_data["nom"], item_data["soin"], item_data["valeur"])
+            elif item_data["type"] == "armure":
+                item = Armure(item_data["nom"], item_data["defense_bonus"], item_data["valeur"])
             else:
                 continue
             self.hero.inventaire.ajouter(item)
 
-        print(f"\nPartie de {self.hero.nom} chargée avec succès !")
+        print(f"\nPartie de {self.hero.nom} chargee avec succes !")
         print(self.hero)
         self.etat_jeu = "exploration"
