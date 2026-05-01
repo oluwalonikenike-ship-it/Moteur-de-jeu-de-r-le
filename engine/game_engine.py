@@ -8,7 +8,9 @@ from models.item import Arme, Potion, Armure
 from database import Database
 from data_loader import DataLoader
 
-
+class CombatError(Exception):
+    """Exception levée lors d'erreurs de combat."""
+    pass
 class GameEngine:
     """Orchestre la boucle principale du jeu."""
 
@@ -23,9 +25,17 @@ class GameEngine:
         self.hero = None
         self.etat_jeu = "menu"
         self.chemin_sauvegarde = "data/sauvegarde.json"
-        self.loader = DataLoader()
-        self.templates_monstres = self.loader.charger_monstres()
-        self.db = Database()
+        try:
+            self.loader = DataLoader()
+            self.templates_monstres = self.loader.charger_monstres()
+        except FileNotFoundError as e:
+            print(f"Erreur chargement monstres : {e}")
+            self.templates_monstres = []
+        try:
+            self.db = Database()
+        except Exception as e:
+            print(f"Erreur connexion base de données : {e}")
+            self.db = None
 
     def demarrer(self):
         """Démarre le jeu et affiche le menu principal."""
@@ -46,7 +56,11 @@ class GameEngine:
         print("2. Charger partie")
         print("3. Quitter")
 
-        choix = input("\nVotre choix :").strip()
+        try:
+            choix = input("\nVotre choix :").strip()
+        except EOFError:
+            self.etat_jeu = "fin"
+            return
 
         if choix == "1":
             self.nouvelle_partie()
@@ -61,7 +75,10 @@ class GameEngine:
     def nouvelle_partie(self):
         """Cree un nouveau heros et lance l'exploration."""
         print("\n--- CREATION DU HERO ---")
-        nom = input("Nom de votre heros :").strip()
+        try:
+            nom = input("Nom de votre heros :").strip()
+        except EOFError:
+            nom = "Heros"
         if not nom:
             nom = "Heros"
 
@@ -70,7 +87,11 @@ class GameEngine:
         print("2. Mage (PV: 80, ATQ: 25, DEF: 4)")
         print("3. Archer (PV: 100, ATQ: 20, DEF: 6)")
 
-        choix = input("\nVotre choix : ").strip()
+        try:
+            choix = input("\nVotre choix : ").strip()
+        except EOFError:
+            choix = "1"
+
         classes = {
             "1": "Guerrier",
             "2": "Mage",
@@ -78,7 +99,12 @@ class GameEngine:
         }
 
         classe = classes.get(choix, "Guerrier")
-        self.hero = Hero(nom, classe)
+
+        try:
+            self.hero = Hero(nom, classe)
+        except ValueError as e:
+            print(f"Erreur creation héros : {e}")
+            return
 
         stats = self.STATS_CLASSE[classe]
         self.hero.pv_max = stats["pv_max"]
@@ -86,8 +112,11 @@ class GameEngine:
         self.hero.attaque = stats["attaque"]
         self.hero.defense = stats["defense"]
 
-        potion_depart = Potion(nom="Potion de soin", soin=30, valeur=10)
-        self.hero.inventaire.ajouter(potion_depart)
+        try:
+            potion_depart = Potion(nom="Potion de soin", soin=30, valeur=10)
+            self.hero.inventaire.ajouter(potion_depart)
+        except ValueError as e:
+            print(f"Erreur ajout potion de départ : {e}")
 
         print(f"\n{self.hero.nom} le {classe} est pret a l'aventure !")
         print(self.hero)
@@ -101,7 +130,10 @@ class GameEngine:
         print("3. Afficher mon inventaire")
         print("4. Sauvegarder et quitter")
 
-        choix = input("\nVotre choix :").strip()
+        try:
+            choix = input("\nVotre choix :").strip()
+        except EOFError:
+            choix = "4"
 
         if choix == "1":
             print("\nVous avancez prudemment dans le donjon...")
@@ -131,26 +163,35 @@ class GameEngine:
     def trouver_coffre(self):
         """Le heros trouve un coffre avec un item aleatoire."""
         print("\nVous trouvez un coffre !")
-        items_data = self.loader.charger_items()
+        try:
+            items_data = self.loader.charger_items()
+        except FileNotFoundError as e:
+            print(f"Erreur chargement items : {e}")
+            return
+
         if not items_data:
             print("Le coffre est vide.")
             return
+
         item_data = random.choice(items_data)
         type_item = item_data["type_item"]
         nom = item_data["nom"]
         effet = item_data["effet"]
         valeur = item_data["valeur"]
 
-        if type_item == "arme":
-            item = Arme(nom, degats_bonus=effet, valeur=valeur)
-        elif type_item == "potion":
-            item = Potion(nom, soin=effet, valeur=valeur)
-        elif type_item == "armure":
-            item = Armure(nom, defense_bonus=effet, valeur=valeur)
-        else:
-            return
-        print(f"Vous obtenez : {item}")
-        self.hero.inventaire.ajouter(item)
+        try:
+            if type_item == "arme":
+                item = Arme(nom, degats_bonus=effet, valeur=valeur)
+            elif type_item == "potion":
+                item = Potion(nom, soin=effet, valeur=valeur)
+            elif type_item == "armure":
+                item = Armure(nom, defense_bonus=effet, valeur=valeur)
+            else:
+                return
+            print(f"Vous obtenez : {item}")
+            self.hero.inventaire.ajouter(item)
+        except ValueError as e:
+            print(f"Erreur creation item : {e}")
 
     def se_reposer(self):
         """Le heros se repose et recupere des PV."""
@@ -162,6 +203,10 @@ class GameEngine:
 
     def generer_monstre(self):
         """Genere un monstre adapte au niveau du heros."""
+        if not self.templates_monstres:
+            print("Aucun monstre disponible.")
+            return None
+
         niveau_hero = self.hero.niveau
         disponibles = [
             m for m in self.templates_monstres
@@ -176,23 +221,30 @@ class GameEngine:
         attaque = int(template["attaque"] * facteur)
         defense = int(template["defense"] * facteur)
 
-        loot = [
-            Potion(nom="Potion de soin", soin=30, valeur=10),
-            Arme(nom="Epee rouillee", degats_bonus=3, valeur=15),
-        ]
-        return Monstre(
-            nom=template["nom"],
-            pv_max=pv,
-            attaque=attaque,
-            defense=defense,
-            xp_donne=template["xp_donne"],
-            loot_possible=loot
-        )
+        try:
+            loot = [
+                Potion(nom="Potion de soin", soin=30, valeur=10),
+                Arme(nom="Epee rouillee", degats_bonus=3, valeur=15),
+            ]
+            return Monstre(
+                nom=template["nom"],
+                pv_max=pv,
+                attaque=attaque,
+                defense=defense,
+                xp_donne=template["xp_donne"],
+                loot_possible=loot
+            )
+        except ValueError as e:
+            print(f"Erreur creation monstre : {e}")
+            return None
 
     # Systeme de combat
 
     def lancer_combat(self, monstre):
         """Lance et gere la boucle de combat complete."""
+        if monstre is None:
+            raise CombatError("Impossible de lancer un combat sans monstre.")
+
         print(f"\nUn {monstre.nom} apparait !")
         print(f"   {monstre}")
         print("-" * 40)
@@ -231,10 +283,15 @@ class GameEngine:
         print("  1. Attaquer")
         print("  2. Utiliser un objet")
         print("  3. Fuir")
-        return input("  Votre choix : ").strip()
+        try:
+            return input("  Votre choix : ").strip()
+        except EOFError:
+            return "1"
 
     def action_attaquer(self, monstre):
         """Le heros attaque le monstre."""
+        if monstre is None:
+            raise ValueError("Le monstre ne peut pas être None.")
         degats = self.hero.attaquer(monstre)
         print(f"\n  {self.hero.nom} attaque {monstre.nom} pour {degats} degats !")
         if not monstre.est_vivant():
@@ -246,7 +303,11 @@ class GameEngine:
         if not self.hero.inventaire.items:
             return
 
-        choix = input("  Numero de l'objet (0 pour annuler) : ").strip()
+        try:
+            choix = input("  Numero de l'objet (0 pour annuler) : ").strip()
+        except EOFError:
+            return
+
         if not choix.isdigit():
             print("  Entree invalide.")
             return
@@ -256,7 +317,10 @@ class GameEngine:
             return
         if 0 <= index < len(self.hero.inventaire.items):
             item = self.hero.inventaire.items[index]
-            self.hero.inventaire.utiliser(item, self.hero)
+            try:
+                self.hero.inventaire.utiliser(item, self.hero)
+            except ValueError as e:
+                print(f"  Erreur utilisation objet : {e}")
         else:
             print("  Numero invalide.")
 
@@ -270,6 +334,8 @@ class GameEngine:
 
     def tour_monstre(self, monstre):
         """Le monstre attaque le heros."""
+        if monstre is None:
+            raise ValueError("Le monstre ne peut pas être None.")
         if random.random() < 0.2:
             degats_bruts = monstre.attaque_speciale()
             degats = self.hero.recevoir_degats(degats_bruts)
@@ -280,63 +346,88 @@ class GameEngine:
     def victoire(self, monstre):
         """Gere la victoire du heros."""
         print(f"\nVictoire ! Vous avez vaincu {monstre.nom} !")
-        self.hero.gagner_xp(monstre.xp_donne)
+        try:
+            self.hero.gagner_xp(monstre.xp_donne)
+        except ValueError as e:
+            print(f"Erreur gain XP : {e}")
         loot = monstre.generer_loot()
         if loot:
             self.hero.inventaire.ajouter(loot)
-        self.db.enregistrer_partie(self.hero, "victoire")
-        self.db.enregistrer_score(self.hero)
+        if self.db:
+            try:
+                self.db.enregistrer_partie(self.hero, "victoire")
+                self.db.enregistrer_score(self.hero)
+            except Exception as e:
+                print(f"Erreur enregistrement : {e}")
 
     def defaite(self):
         """Gere la defaite du heros."""
         print(f"\n{self.hero.nom} est tombe au combat...")
         print("Game Over.")
-        self.db.enregistrer_partie(self.hero, "defaite")
+        if self.db:
+            try:
+                self.db.enregistrer_partie(self.hero, "defaite")
+            except Exception as e:
+                print(f"Erreur enregistrement : {e}")
 
     def sauvegarder(self):
         """Sauvegarde la progression dans un fichier JSON."""
         if self.hero is None:
             print("Aucun heros a sauvegarder.")
             return
-        os.makedirs("data", exist_ok=True)
-        donnees = {
-            "nom": self.hero.nom,
-            "classe": self.hero.classe_hero,
-            "niveau": self.hero.niveau,
-            "xp": self.hero.xp,
-            "xp_pour_niveau": self.hero.xp_pour_niveau,
-            "pv_actuel": self.hero.pv_actuel,
-            "pv_max": self.hero.pv_max,
-            "attaque": self.hero.attaque,
-            "defense": self.hero.defense,
-            "vitesse": self.hero.vitesse,
-            "or": self.hero.or_possede,
-            "inventaire": [
-                {
-                    "nom": item.nom,
-                    "type": item.type_item,
-                    "effet": item.effet,
-                    "valeur": item.valeur,
-                    "soin": getattr(item, "soin", 0),
-                    "degats_bonus": getattr(item, "degats_bonus", 0),
-                    "defense_bonus": getattr(item, "defense_bonus", 0),
-                }
-                for item in self.hero.inventaire.items
-            ]
-        }
-        with open(self.chemin_sauvegarde, "w", encoding="utf-8") as f:
-            json.dump(donnees, f, indent=4, ensure_ascii=False)
+        try:
+            os.makedirs("data", exist_ok=True)
+            donnees = {
+                "nom": self.hero.nom,
+                "classe": self.hero.classe_hero,
+                "niveau": self.hero.niveau,
+                "xp": self.hero.xp,
+                "xp_pour_niveau": self.hero.xp_pour_niveau,
+                "pv_actuel": self.hero.pv_actuel,
+                "pv_max": self.hero.pv_max,
+                "attaque": self.hero.attaque,
+                "defense": self.hero.defense,
+                "vitesse": self.hero.vitesse,
+                "or": self.hero.or_possede,
+                "inventaire": [
+                    {
+                        "nom": item.nom,
+                        "type": item.type_item,
+                        "effet": item.effet,
+                        "valeur": item.valeur,
+                        "soin": getattr(item, "soin", 0),
+                        "degats_bonus": getattr(item, "degats_bonus", 0),
+                        "defense_bonus": getattr(item, "defense_bonus", 0),
+                    }
+                    for item in self.hero.inventaire.items
+                ]
+            }
+            with open(self.chemin_sauvegarde, "w", encoding="utf-8") as f:
+                json.dump(donnees, f, indent=4, ensure_ascii=False)
+        except OSError as e:
+            print(f"Erreur lors de la sauvegarde : {e}")
 
     def charger(self):
         """Charge une partie depuis un fichier JSON."""
         if not os.path.exists(self.chemin_sauvegarde):
             print("\nAucune sauvegarde trouvee.")
             return
+        try:
+            with open(self.chemin_sauvegarde, "r", encoding="utf-8") as f:
+                donnees = json.load(f)
+        except json.JSONDecodeError:
+            print("\nErreur : fichier de sauvegarde corrompu.")
+            return
+        except OSError as e:
+            print(f"\nErreur lors du chargement : {e}")
+            return
 
-        with open(self.chemin_sauvegarde, "r", encoding="utf-8") as f:
-            donnees = json.load(f)
+        try:
+            self.hero = Hero(donnees["nom"], donnees["classe"])
+        except (KeyError, ValueError) as e:
+            print(f"Erreur recreation héros : {e}")
+            return
 
-        self.hero = Hero(donnees["nom"], donnees["classe"])
         self.hero.niveau = donnees["niveau"]
         self.hero.xp = donnees["xp"]
         self.hero.xp_pour_niveau = donnees["xp_pour_niveau"]
@@ -348,15 +439,19 @@ class GameEngine:
         self.hero.or_possede = donnees["or"]
 
         for item_data in donnees["inventaire"]:
-            if item_data["type"] == "arme":
-                item = Arme(item_data["nom"], item_data["degats_bonus"], item_data["valeur"])
-            elif item_data["type"] == "potion":
-                item = Potion(item_data["nom"], item_data["soin"], item_data["valeur"])
-            elif item_data["type"] == "armure":
-                item = Armure(item_data["nom"], item_data["defense_bonus"], item_data["valeur"])
-            else:
+            try:
+                if item_data["type"] == "arme":
+                    item = Arme(item_data["nom"], item_data["degats_bonus"], item_data["valeur"])
+                elif item_data["type"] == "potion":
+                    item = Potion(item_data["nom"], item_data["soin"], item_data["valeur"])
+                elif item_data["type"] == "armure":
+                    item = Armure(item_data["nom"], item_data["defense_bonus"], item_data["valeur"])
+                else:
+                    continue
+                self.hero.inventaire.ajouter(item)
+            except (KeyError, ValueError) as e:
+                print(f"Erreur chargement item : {e}")
                 continue
-            self.hero.inventaire.ajouter(item)
 
         print(f"\nPartie de {self.hero.nom} chargee avec succes !")
         print(self.hero)
