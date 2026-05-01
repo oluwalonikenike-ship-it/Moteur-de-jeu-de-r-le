@@ -24,10 +24,6 @@ class Hero(Personnage):
         print(f"{self.nom} gagne {montant} XP ! (Total : {self.xp})")
         if not isinstance(montant, (int, float)) or montant < 0:
             raise ValueError("L'XP doit être un nombre positif.")
-        self.xp += montant
-        print(f"{self.nom} gagne {montant} XP ! (Total: {self.xp})")
-        if self.xp >= self.xp_pour_niveau:
-            self.monter_niveau()
 
     def monter_niveau(self):
         self.niveau += 1
