@@ -3,15 +3,6 @@ from models.personnage import Personnage
 from models.inventaire import Inventaire
 
 class Hero(Personnage):
-    
-
-    def __init__(self, nom, classe_hero):
-
-     from models.personnage import Personnage
-     from models.inventaire import Inventaire
-
-
-class Hero(Personnage):
 
     def __init__(self, nom, classe_hero):
         if not isinstance(classe_hero, str) or not classe_hero.strip():
