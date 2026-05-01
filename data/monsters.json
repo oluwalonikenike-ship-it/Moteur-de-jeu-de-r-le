@@ -1,18 +1,18 @@
 [
     {
         "nom": "Gobelin",
-        "pv": 30,
-        "attaque": 8,
-        "defense": 2,
-        "xp_donne": 50,
+        "pv": 40,
+        "attaque": 12,
+        "defense": 6,
+        "xp_donne": 20,
         "niveau_min": 1
     },
     {
         "nom": "Squelette",
-        "pv": 50,
-        "attaque": 12,
-        "defense": 5,
-        "xp_donne": 80,
+        "pv": 70,
+        "attaque": 15,
+        "defense": 10,
+        "xp_donne": 40,
         "niveau_min": 2
     },
     {

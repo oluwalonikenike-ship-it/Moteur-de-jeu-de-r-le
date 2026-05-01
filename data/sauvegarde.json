@@ -1,4 +1,5 @@
 {
+<<<<<<< Updated upstream
     "nom": "HANINE",
     "classe": "Guerrier",
     "niveau": 2,
@@ -8,6 +9,17 @@
     "pv_max": 140,
     "attaque": 21,
     "defense": 10,
+=======
+    "nom": "James",
+    "classe": "Guerrier",
+    "niveau": 1,
+    "xp": 40,
+    "xp_pour_niveau": 100,
+    "pv_actuel": 88,
+    "pv_max": 120,
+    "attaque": 18,
+    "defense": 8,
+>>>>>>> Stashed changes
     "vitesse": 10,
     "or": 0,
     "inventaire": [
@@ -28,6 +40,15 @@
             "soin": 0,
             "degats_bonus": 3,
             "defense_bonus": 0
+        },
+        {
+            "nom": "Armure en fer",
+            "type": "armure",
+            "effet": "+7 defense",
+            "valeur": 80,
+            "soin": 0,
+            "degats_bonus": 0,
+            "defense_bonus": 7
         }
     ]
 }
